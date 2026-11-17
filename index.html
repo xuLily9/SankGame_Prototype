@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sand Ark: Quick Mode (Society 5.0)</title>
+<style>
+:root{--ink:#2b2118;--panel:#fff8ec;--accent:#e0662f;--teal:#1f8a8a;--purple:#6c4bd1;--ok:#2e9d57;--bad:#c0392b;--line:#e2cfa9;--gold:#f1b31c;--blue:#2f6fb5}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f3e3c3;color:var(--ink)}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--ink);color:#fff;flex-wrap:wrap;gap:8px}
+header h1{font-size:20px;margin:0}
+header small{opacity:.7;font-weight:400}
+.hdr-right{display:flex;gap:10px;align-items:center;font-size:15px}
+.wrap{max-width:1100px;margin:auto;padding:14px}
+.panel{background:var(--panel);border-radius:14px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+button{font:inherit}
+button.main{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-size:15px;font-weight:700;cursor:pointer}
+button.main:hover:not(:disabled){filter:brightness(1.08)}
+button.main:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:transparent;border:2px solid var(--ink);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}
+button.small{background:#fff;border:2px solid var(--line);border-radius:10px;padding:6px 12px;font-weight:700;cursor:pointer}
+button.small.on{border-color:var(--accent);background:#fde9dd}
+/* map */
+.map{position:relative;background:linear-gradient(#f7e2b5,#e8c48a);border-radius:16px;padding:20px;min-height:430px;overflow:hidden}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.node{position:absolute;transform:translate(-50%,-50%);width:150px;text-align:center;cursor:pointer;border:0;background:none}
+.node .disc{width:78px;height:78px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff;border:4px solid var(--accent);box-shadow:0 4px 10px rgba(0,0,0,.15);transition:transform .15s}
+.node:hover .disc{transform:scale(1.08)}
+.node.locked{cursor:not-allowed}
+.node.locked .disc{filter:grayscale(1);opacity:.5;border-color:#999}
+.node.next .disc{animation:bpulse .8s infinite alternate}
+.node .nm{font-weight:800;font-size:14px;margin-top:6px;background:rgba(255,248,236,.9);border-radius:8px;padding:2px 6px;display:inline-block}
+.node .st{font-size:16px;letter-spacing:2px}
+.rec{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:10px;padding:2px 8px}
+.st .off{filter:grayscale(1);opacity:.3}
+@keyframes bpulse{from{transform:scale(1)}to{transform:scale(1.08);box-shadow:0 0 0 8px rgba(224,102,47,.25)}}
+/* level frame */
+.lvtop{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.lvtop .info{flex:1 1 320px}
+.lvtop h2{margin:0 0 4px;font-size:20px}
+.concept{display:inline-block;font-size:12px;background:#f1edff;border:1px solid var(--purple);color:var(--purple);border-radius:10px;padding:2px 10px;font-weight:700}
+.mission{flex:1 1 320px;background:#fff;border:2px solid var(--gold);border-radius:12px;padding:10px 12px}
+.mission h3{margin:0 0 6px;font-size:14px}
+.goal{font-size:13px;margin:4px 0;display:flex;gap:8px;align-items:center}
+.goal .star{font-size:18px;filter:grayscale(1);opacity:.4;transition:.3s}
+.goal.done .star{filter:none;opacity:1;transform:scale(1.15)}
+.goal small{color:#8a6d3b;margin-left:auto;white-space:nowrap}
+.hint{font-size:14px;background:#2b2118;color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;line-height:1.45}
+.hint b{color:#f8c98a}
+.bar2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;font-size:15px}
+.pill{background:#fff;border:2px solid var(--line);border-radius:20px;padding:4px 12px;font-weight:700}
+.log{margin-top:12px;max-height:130px;overflow:auto;font-size:13px;background:#fff;border-radius:10px;padding:8px 10px;border:1px solid var(--line)}
+.log p{margin:3px 0}
+.good{color:var(--ok)} .badt{color:var(--bad)} .linkc{color:var(--purple);font-weight:700}
+/* L1 grid */
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:560px}
+.tile{aspect-ratio:1;border-radius:12px;border:2px solid #d7b57c;background:#f0d39c;font-size:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s}
+.tile:hover{transform:scale(1.05)}
+.tile.rev{background:#fff;cursor:default;transform:none}
+.tile.scan{background:#e9e4ff;border:2px dashed var(--purple)}
+.tile.scan span{opacity:.55}
+.scanmode .tile:not(.rev){outline:3px dashed var(--purple);outline-offset:-6px}
+/* L2 */
+.l2{display:flex;gap:18px;flex-wrap:wrap}
+.grid3{display:grid;grid-template-columns:repeat(3,110px);gap:8px;padding:12px;border-radius:14px;transition:background .6s}
+.grid3.bp{background:#1f4f86;background-image:linear-gradient(#ffffff22 1px,transparent 1px),linear-gradient(90deg,#ffffff22 1px,transparent 1px);background-size:22px 22px}
+.grid3.real{background:#d9b77a}
+.cell{height:110px;border-radius:10px;border:2px dashed #ffffff88;background:#ffffff14;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.cell .ic{font-size:36px}
+.real .cell{border:2px solid #a8743a;background:#f3dcb0;color:var(--ink)}
+.cell.dune{background:#c9a368;border:2px solid #a07a40;color:#5a3d1e;cursor:not-allowed}
+.palette{display:flex;flex-direction:column;gap:8px}
+.room{display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:700;min-width:190px}
+.room.sel{border-color:var(--accent);background:#fde9dd}
+.room .ok{margin-left:auto;color:var(--ok)}
+.twin{flex:1 1 260px;background:#eef4fb;border:2px solid var(--blue);border-radius:12px;padding:10px 12px;font-size:14px}
+.twin h4{margin:0 0 6px;color:var(--blue)}
+.lk{margin:4px 0}.lk.on{color:var(--ok);font-weight:700}.lk.off{color:#999}
+/* L3 */
+.crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.mate{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.mate .face{font-size:44px}
+.mate .nm{font-weight:800}
+.hbar{height:12px;background:#eee;border-radius:6px;overflow:hidden;margin:6px 0}
+.hbar div{height:100%}
+.mate.down{opacity:.55}
+.warn{font-size:12px;color:var(--bad);font-weight:700}
+/* L4 */
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;max-width:520px}
+.res div{background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px;text-align:center;font-size:24px;font-weight:800}
+.res small{display:block;font-size:12px;font-weight:600;color:#8a6d3b}
+.machines{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.mach{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px;cursor:pointer;text-align:left}
+.mach.on{border-color:var(--teal);background:#e6f7f5;box-shadow:0 0 0 3px #bfe9e4}
+.mach .ic{font-size:28px}
+.daynight{font-size:22px;font-weight:800}
+/* L5 cards */
+.l5{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.3fr);gap:14px}
+@media(max-width:820px){.l5{grid-template-columns:1fr}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+.card{border:2px solid var(--line);border-radius:12px;padding:10px;background:#fff;cursor:pointer;text-align:left;position:relative;transition:transform .12s}
+.card:hover:not(:disabled){transform:translateY(-3px)}
+.card.cyber{border-color:var(--purple);background:#f6f3ff}
+.card.physical{border-color:var(--teal);background:#effaf9}
+.card.boost{box-shadow:0 0 0 4px #c9b8ff}
+.card:disabled{opacity:.42;cursor:not-allowed}
+.card .icon{font-size:24px}.card .name{font-weight:700;font-size:14px;margin:4px 0}.card .desc{font-size:12px}
+.card .tag{font-size:11px;margin-top:6px;font-weight:700}
+.card.cyber .tag{color:var(--purple)}.card.physical .tag{color:var(--teal)}
+.card .cost{font-size:11px;margin-top:4px;color:#7a5b2e}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;font-size:13px}
+.stats b{float:right}
+.sbar{height:9px;background:#e6dccb;border-radius:6px;overflow:hidden;margin-top:3px}.sbar div{height:100%}
+svg.scene{width:100%;height:auto;border-radius:10px;display:block}
+.shake{animation:shake .15s 10}
+@keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(-6px,2px)}50%{transform:translate(5px,-2px)}75%{transform:translate(-3px,1px)}100%{transform:translate(0,0)}}
+.pulse{animation:bp2 .8s infinite alternate}
+@keyframes bp2{from{transform:scale(1)}to{transform:scale(1.06)}}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(30,20,10,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:var(--panel);border-radius:16px;max-width:580px;width:100%;padding:22px;max-height:90vh;overflow:auto;animation:pop .2s ease}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h2{margin-top:0}.modal .big{font-size:44px}
+.stars{font-size:46px;letter-spacing:6px}.stars .off{filter:grayscale(1);opacity:.3}
+.tipbox{background:#f1edff;border-left:4px solid var(--purple);padding:10px 12px;border-radius:8px;font-size:14px;line-height:1.45;margin:10px 0}
+.howto{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5}
+.orig{font-size:12px;color:#7a5b2e;margin-top:6px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:10px 12px;border-radius:10px;border:2px solid var(--line);background:#fff;cursor:pointer}
+.opt.right{border-color:var(--ok);background:#e8f7ee}.opt.wrong{border-color:var(--bad);background:#fbeaea}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;z-index:30;font-weight:700;animation:toast 2.4s ease forwards}
+@keyframes toast{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏜️ Sand Ark: Quick Mode <small>— 4 levels · 8 min</small></h1>
+  <div class="hdr-right"><span id="totalStars">⭐ 0/12</span><button class="ghost" style="color:#fff;border-color:#fff" onclick="showMap()">🗺️ Map</button></div>
+</header>
+<div class="wrap"><div id="screen"></div></div>
+<div id="modalRoot"></div>
+
+<script>
+// ===================== helpers =====================
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const starsHTML=n=>[0,1,2].map(i=>`<span class="${i<n?'':'off'}">⭐</span>`).join('');
+const Q=[];
+function pushModal(h){Q.push(h); if(!$('modalRoot').innerHTML) nextModal();}
+function nextModal(){const h=Q.shift(); $('modalRoot').innerHTML=h?`<div class="modal-bg"><div class="modal">${h}</div></div>`:'';}
+function closeModal(){$('modalRoot').innerHTML=''; nextModal();}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2500);}
+
+let BEST=[0,0,0,0], cur=null, L={}, celebrated=false;
+
+// ===================== LEVELS =====================
+const LV=[
+// ---------- LEVEL 1 ----------
+{name:'Salvage the Car', icon:'🚗', concept:'Drone & 3D site scanning',
+ story:'The car broke down. Find the <b>terminal</b> and <b>12 parts</b>.',
+ how:['Click a tile to dig (1 move).','Drone scan shows 4 tiles (1 move).','You have 9 moves.'],
+ orig:'Full game: Prologue.',
+ tip:'Drones map a site in minutes, so workers only dig where needed. Japan uses this on public works (i-Construction).',
+ init(){ L={tiles:shuffle(['terminal',...Array(6).fill('parts'),...Array(13).fill('sand')]).map(c=>({c,rev:false,scan:false})),moves:9,parts:0,terminal:false,mode:'dig',scans:0,over:false,log:[]}; },
+ goals(){ return [[L.terminal,'Find the terminal',L.terminal?'✓':'—'],[L.parts>=8,'8 parts',L.parts+'/8'],[L.parts>=12,'12 parts',L.parts+'/12']]; },
+ render(){
+  const icon=c=>c==='terminal'?'📟':c==='parts'?'⚙️':'·';
+  return `<div class="hint">${L.mode==='scan'?'🚁 Scan: click a tile to reveal a 2×2 area.':'⛏️ Dig: click a tile. Purple tiles are already scanned.'}</div>
+  <div class="bar2"><span class="pill">Moves left: ${L.moves}</span><span class="pill">⚙️ Parts: ${L.parts}/12</span><span class="pill">📟 Terminal: ${L.terminal?'found':'missing'}</span>
+   <button class="small ${L.mode==='dig'?'on':''}" onclick="L.mode='dig';draw()">⛏️ Dig</button>
+   <button class="small ${L.mode==='scan'?'on':''}" onclick="L.mode='scan';draw()">🚁 Drone scan</button></div>
+  <div class="grid5 ${L.mode==='scan'?'scanmode':''}">${L.tiles.map((t,i)=>`<button class="tile ${t.rev?'rev':t.scan?'scan':''}" onclick="LV[0].click(${i})">${t.rev?icon(t.c):t.scan?`<span>${icon(t.c)==='·'?'🏜️':icon(t.c)}</span>`:'🏜️'}</button>`).join('')}</div>
+  <div class="log">${L.log.map(l=>`<p class="${l[1]}">${l[0]}</p>`).join('')}</div>`;
+ },
+ click(i){
+  if(L.over||L.moves<=0) return; const t=L.tiles[i];
+  if(L.mode==='scan'){
+   const r=Math.min(Math.floor(i/5),2), c=Math.min(i%5,3); let found=0;
+   [[r,c],[r,c+1],[r+1,c],[r+1,c+1]].forEach(([y,x])=>{const tt=L.tiles[y*5+x]; tt.scan=true; if(tt.c!=='sand'&&!tt.rev) found++;});
+   L.moves--; L.scans++; L.mode='dig'; L.log.unshift([`🚁 Scan: ${found} item(s) found.`,'linkc']);
+  } else {
+   if(t.rev) return; t.rev=true; L.moves--;
+   if(t.c==='terminal'){L.terminal=true; L.log.unshift(['📟 Terminal found','good']);}
+   else if(t.c==='parts'){L.parts+=2; L.log.unshift(['⚙️ +2 parts','good']);}
+   else L.log.unshift(['Sand','']);
+  }
+  draw();
+  if(L.moves<=0 || (L.terminal&&L.parts>=12)){ L.over=true; setTimeout(finishLevel,500); }
+ }},
+// ---------- LEVEL 2 ----------
+{name:'Plan the Ark', icon:'📐', concept:'Digital twin / BIM',
+ story:'Design the ark layout. You can only build <b>once</b>.',
+ how:['Pick a room, then click a square.','Rooms side by side make links.','Press Build when ready.'],
+ orig:'Full game: Blueprint board.',
+ tip:'A digital twin (BIM) is a virtual model of a building. Test it on screen first: fixing mistakes there is cheap.',
+ rooms:{B:['🔋','Battery'],K:['🍲','Kitchen'],W:['💧','Water station'],R:['🛏️','Rest room']},
+ links:[['B','K','Battery – Kitchen'],['W','K','Water – Kitchen'],['R','K','Rest room – Kitchen'],['B','W','Battery – Water']],
+ init(){ L={grid:Array(9).fill(null),dune:6,sel:'K',built:false}; },
+ adj(a,b){ const ra=Math.floor(a/3),ca=a%3,rb=Math.floor(b/3),cb=b%3; return Math.abs(ra-rb)+Math.abs(ca-cb)===1; },
+ active(){ return this.links.filter(([a,b])=>{const pa=L.grid.indexOf(a),pb=L.grid.indexOf(b); return pa>=0&&pb>=0&&this.adj(pa,pb);}); },
+ goals(){ const n=this.active().length, ok=L.built; return [[ok&&n>=1,'Build with 1 link',Math.min(n,1)+'/1'],[ok&&n>=2,'2 links',Math.min(n,2)+'/2'],[ok&&n>=3,'3 links',n+'/3']]; },
+ render(){
+  const act=this.active(), placed=Object.keys(this.rooms).every(k=>L.grid.includes(k));
+  return `<div class="hint">${L.built?'🏗️ Built.':'🧊 Blue = digital twin. Moving rooms is free. Max 3 links.'}</div>
+  <div class="l2"><div class="palette">${Object.entries(this.rooms).map(([k,[ic,nm]])=>`<button class="room ${L.sel===k?'sel':''}" onclick="L.sel='${k}';draw()" ${L.built?'disabled':''}><span style="font-size:24px">${ic}</span>${nm}${L.grid.includes(k)?'<span class="ok">✓</span>':''}</button>`).join('')}
+   <button class="main" ${placed&&!L.built?'':'disabled'} onclick="LV[1].build()">🏗️ Build</button></div>
+  <div class="grid3 ${L.built?'real':'bp'}">${L.grid.map((r,i)=>i===L.dune?'<div class="cell dune"><span class="ic">🏜️</span>Sand dune</div>':`<button class="cell" onclick="LV[1].place(${i})">${r?`<span class="ic">${this.rooms[r][0]}</span>${this.rooms[r][1]}`:'+'}</button>`).join('')}</div>
+  <div class="twin"><h4>🧊 Digital twin</h4>${this.links.map(l=>`<div class="lk ${act.includes(l)?'on':'off'}">${act.includes(l)?'✅':'⬜'} ${l[2]}</div>`).join('')}
+   <p style="margin:8px 0 0"><b>${act.length}/3 links</b></p></div></div>`;
+ },
+ place(i){ if(L.built||!L.sel) return; const old=L.grid.indexOf(L.sel); if(old>=0) L.grid[old]=null; L.grid[i]=L.sel;
+  const next=Object.keys(this.rooms).find(k=>!L.grid.includes(k)); L.sel=next||L.sel; draw(); },
+ build(){ L.built=true; draw(); setTimeout(finishLevel,900); }},
+// ---------- LEVEL 3 ----------
+{name:'Care for the Crew', icon:'🤒', concept:'Human-centred work & wearable sensors',
+ story:'Sam is sick. Finish 8 repairs in 5 turns. Don\'t let anyone collapse.',
+ how:['Choose Work or Rest for each person, then press End turn.','Work: +1 repair, −20 health (Sam: −30). Rest: +25 health.','Sensors show everyone\'s health. At 0, a person collapses.'],
+ orig:'Full game: crew illness, kitchen, rest room.',
+ tip:'Wearable sensors show fatigue in real time, so teams can rest people before they get hurt. Society 5.0 puts workers\' health first.',
+ init(){ L={turn:1,max:5,work:0,goal:8,log:[],crew:[
+   {name:'Alex',icon:'🧑‍🔧',h:80,sick:false,act:'work',down:false},
+   {name:'Sam',icon:'🧑‍🔧',h:50,sick:true,act:'rest',down:false},
+   {name:'Robin',icon:'👷',h:70,sick:false,act:'work',down:false}]}; },
+ cost(c){ return c.sick?30:20; },
+ goals(){ const any=L.crew.some(c=>c.down), end=L.turn>L.max, mn=Math.min(...L.crew.map(c=>c.h));
+  return [[L.work>=L.goal,'8 repairs',L.work+'/8'],[!any,'Nobody collapses',any?'✗':'✓'],[end&&mn>=50,'Everyone ≥ 50% at the end','min '+mn+'%']]; },
+ render(){
+  const planned=L.crew.filter(c=>!c.down&&c.act==='work').reduce((a,c)=>a+(c.h>40?1:0.5),0);
+  return `<div class="hint">Turn ${Math.min(L.turn,L.max)}/${L.max} · This turn: +${planned} repair</div>
+  <div class="bar2"><span class="pill">🔧 ${L.work}/${L.goal}</span><span class="pill" style="border-color:#6c4bd1;color:#6c4bd1">📡 Sensors on</span>
+  <button class="main" onclick="LV[2].endTurn()">End turn ▶</button></div>
+  <div class="crew">${L.crew.map((c,i)=>{const after=c.act==='work'?c.h-this.cost(c):Math.min(100,c.h+25);
+   return `<div class="mate ${c.down?'down':''}"><div class="face">${c.icon}</div><div class="nm">${c.name}${c.sick?' 🤒':''}</div>
+   <div class="hbar"><div style="width:${c.h}%;background:${c.h<40?'#c0392b':c.h<60?'#e67e22':'#2e9d57'}"></div></div><div><b>${c.h}%</b>${c.down?'':` → <b style="color:${after<=0?'#c0392b':after<40?'#e67e22':'#2e9d57'}">${Math.max(0,after)}%</b>`}</div>
+   ${c.sick&&!c.down?'<div class="warn">Sick: work costs −30</div>':''}${!c.down&&c.h<=40?'<div class="warn">Under 40%: work gives half</div>':''}${!c.down&&c.act==='work'&&after<=0?'<div class="warn">Will collapse!</div>':''}
+   ${c.down?'<div class="warn">Collapsed</div>':`<div style="margin-top:8px"><button class="small ${c.act==='work'?'on':''}" onclick="L.crew[${i}].act='work';draw()">🔧 Work</button> <button class="small ${c.act==='rest'?'on':''}" onclick="L.crew[${i}].act='rest';draw()">🛏️ Rest</button></div>`}</div>`;}).join('')}</div>
+  <div class="log">${L.log.map(l=>`<p class="${l[1]}">${l[0]}</p>`).join('')}</div>`;
+ },
+ endTurn(){
+  if(L.turn>L.max) return;
+  L.crew.forEach(c=>{ if(c.down) return;
+   if(c.act==='work'){ const out=c.h>40?1:0.5; L.work+=out; c.h-=this.cost(c); L.log.unshift([`${c.name}: +${out} repair`,'good']); }
+   else { c.h=Math.min(100,c.h+25); L.log.unshift([`${c.name}: rest`,'']); }
+   if(c.h<=0){ c.h=0; c.down=true; L.log.unshift([`${c.name} collapsed`,'badt']); }
+  });
+  L.turn++; draw(); if(L.turn>L.max || L.crew.every(c=>c.down)) setTimeout(finishLevel,500); }},
+// ---------- LEVEL 4 (storm) ----------
+{name:'Storm Shelter', icon:'🌪️', concept:'Cyber–physical fusion + human–robot collaboration',
+ story:'The storm hits in 3 days. Finish the shelter (30% done).',
+ how:['3 actions a day, then End day.','<b style="color:#6c4bd1">CYBER</b> card gives 💾. Next <b style="color:#1f8a8a">PHYSICAL</b> card uses it: +50%.','Keep crew energy ≥ 50.'],
+ orig:'Full game: storm chapter and finale.',
+ tip:'Society 5.0 links data (cyber) with machines (physical). Data guides robots and printers; people supervise.',
+ cards:[
+  {id:'hand',type:'basic',icon:'🧱',name:'Build by Hand',desc:'+8% shelter. −15 energy.',c:{},use(){const p=LV[3].b(8);L.progress+=p;L.energy-=15;return `Built by hand: +${p}%`;}},
+  {id:'sand',type:'basic',icon:'⛏️',name:'Gather Sand',desc:'+20 sand. −10 energy.',c:{},use(){L.sand+=20;L.energy-=10;return 'Gathered 20 sand';}},
+  {id:'solar',type:'basic',icon:'☀️',name:'Solar Charge',desc:'+25 power.',c:{},use(){L.power+=25;return 'Charged +25 power';}},
+  {id:'rest',type:'basic',icon:'🍲',name:'Rest & Meal',desc:'+30 crew energy.',c:{},use(){L.energy+=30;return 'Crew rested: +30 energy';}},
+  {id:'twin',type:'cyber',icon:'🧊',name:'Digital Twin',desc:'All building +25% (max 2).',c:{power:10},can:()=>L.plan<2,use(){L.plan++;return `Digital twin Lv${L.plan}: building +${L.plan*25}%`;}},
+  {id:'iot',type:'cyber',icon:'📡',name:'IoT Sensors',desc:'Night damage & fatigue halved.',c:{power:5},can:()=>!L.sensors,use(){L.sensors=true;return 'Sensors online';}},
+  {id:'print',type:'physical',icon:'🖨️',name:'Sand 3D Printer',desc:'+16% shelter.',c:{power:20,sand:20},use(k){const p=LV[3].b(16*(k?1.5:1));L.progress+=p;L.energy-=5;return `3D printed a wall: +${p}%`;}},
+  {id:'robot',type:'physical',icon:'🤖',name:'Robot + Supervisor',desc:'+22% shelter. A human supervises.',c:{power:25,sand:15},use(k){const p=LV[3].b(22*(k?1.5:1));L.progress+=p;L.energy-=8;return `Robot built under human supervision: +${p}%`;}},
+ ],
+ b(x){ return Math.round(x*(1+0.25*L.plan)); },
+ init(){ L={day:1,max:3,ap:3,progress:30,power:40,sand:40,energy:80,data:0,links:0,plan:0,sensors:false,log:[],over:false}; },
+ goals(){ return [[L.progress>=100,'Shelter 100%',L.progress+'%'],[L.energy>=50,'Energy ≥ 50',L.energy+''],[L.links>=2,'2 links',L.links+'/2']]; },
+ can(c){ return !L.over&&L.ap>0&&(c.c.power||0)<=L.power&&(c.c.sand||0)<=L.sand&&(!c.can||c.can()); },
+ render(){
+  const card=c=>{const cost=[c.c.power?`⚡${c.c.power}`:'',c.c.sand?`🟫${c.c.sand}`:''].filter(Boolean).join(' ')||'Free';
+   const tag=c.type==='cyber'?'CYBER · +1 💾':c.type==='physical'?(L.data?'PHYSICAL · +50%':'PHYSICAL'):'';
+   return `<button class="card ${c.type} ${c.type==='physical'&&L.data&&this.can(c)?'boost':''}" ${this.can(c)?'':'disabled'} onclick="LV[3].use('${c.id}')"><div class="icon">${c.icon}</div><div class="name">${c.name}</div><div class="desc">${c.desc}</div>${tag?`<div class="tag">${tag}</div>`:''}<div class="cost">${cost}</div></button>`;};
+  const sb=(n,ic,v,col,suf='')=>`<div>${ic} ${n}<b>${v}${suf}</b><div class="sbar"><div style="width:${Math.min(100,v)}%;background:${col}"></div></div></div>`;
+  return `<div class="hint">${L.ap>0?`Day ${L.day}/${L.max} · ${L.ap} actions left${L.data?' · next PHYSICAL +50%':''}`:'No actions left → End day'}</div>
+  <div class="l5"><div>${this.scene()}<div class="stats">${sb('Shelter','🏗️',L.progress,'#e0662f','%')}${sb('Crew energy','❤️',L.energy,L.energy<50?'#c0392b':'#2e9d57')}${sb('Power','⚡',L.power,'#f1c40f')}${sb('Sand','🟫',L.sand,'#b9864a')}</div>
+   <p style="font-size:13px;margin:8px 0 0">💾 Data: ${'💾'.repeat(L.data)||'none'} ${L.plan?` · 🧊 Twin Lv${L.plan}`:''}${L.sensors?' · 📡 Sensors':''}</p></div>
+  <div><div class="bar2"><span class="pill">Actions: ${L.ap}</span><button id="endDay" class="main ${L.ap<=0?'pulse':''}" onclick="LV[3].endDay()">End day 🌙</button></div>
+   <div class="cards">${this.cards.map(card).join('')}</div>
+   <div class="log">${L.log.map(l=>`<p class="${l[1]}">${l[0]}</p>`).join('')}</div></div></div>`;
+ },
+ scene(){
+  const t=(L.day-1)/2, P=L.progress, part=h=>clamp((P-h)/25,0,1);
+  const mix=(a,b)=>{const p=x=>[1,3,5].map(i=>parseInt(x.substr(i,2),16));const A=p(a),B=p(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');};
+  return `<svg id="scene" class="scene" viewBox="0 0 400 220"><rect width="400" height="220" fill="${mix('#8fd3f4','#b0653a')}"/>
+  <g opacity="${.3+t*.6}"><ellipse cx="${430-t*90}" cy="90" rx="${50+t*40}" ry="${60+t*30}" fill="#7a4a22"/></g>
+  <path d="M0 180 Q100 165 200 178 T400 175 L400 220 L0 220Z" fill="#e3b873"/>
+  <rect x="110" y="100" width="180" height="78" fill="none" stroke="#5a3d1e" stroke-dasharray="5 4"/><path d="M100 102 L200 52 L300 102" fill="none" stroke="#5a3d1e" stroke-dasharray="5 4"/>
+  <rect x="104" y="170" width="192" height="8" fill="#8d6e4c"/>
+  <rect x="112" y="${170-68*part(25)}" width="176" height="${68*part(25)}" fill="#c98f4a" stroke="#a8743a"/>
+  <path d="M100 102 L200 52 L300 102 Z" fill="#b5532a" opacity="${part(75)}"/>
+  ${P>=100?'<path d="M85 182 A118 118 0 0 1 315 182" fill="none" stroke="#5ad1ff" stroke-width="4"/>':''}
+  <text x="200" y="${P>=50?115:160}" text-anchor="middle" font-size="18" font-weight="800" fill="${P>=50?'#fff':'#3b2a17'}">${P}%</text>
+  <text x="30" y="200" font-size="24">🚐</text><text x="150" y="208" font-size="18">${L.energy>=50?'🧑‍🔧👷':'😫😓'}</text>
+  ${L.plan?'<text x="320" y="60" font-size="18">🧊</text>':''}</svg>`;
+ },
+ use(id){
+  const c=this.cards.find(x=>x.id===id); if(!this.can(c)) return;
+  L.power-=c.c.power||0; L.sand-=c.c.sand||0; L.ap--;
+  let k=false; if(c.type==='physical'&&L.data>0){k=true;L.data--;L.links++;}
+  const m=c.use(k); if(c.type==='cyber') L.data=Math.min(3,L.data+1);
+  L.energy=clamp(L.energy,0,100); L.progress=clamp(L.progress,0,100);
+  L.log.unshift([`${c.icon} ${m}${c.type==='cyber'?' · +1 💾 data':''}`,'good']);
+  if(k){ L.log.unshift(['🔗 Link +50%','linkc']); toast('🔗 Link +50%'); }
+  draw();
+ },
+ endDay(){
+  if(L.over) return; const msg=[]; const fat=L.sensors?5:10; L.energy-=fat; L.power=Math.max(0,L.power-5); msg.push(`night fatigue −${fat} energy`);
+  const r=L.day>=L.max?2:Math.random();
+  if(r>1) msg.push('storm tonight');
+  else if(r<.4){const d=L.sensors?3:6; L.progress-=d; msg.push(`💨 sand gust −${d}% shelter`);} else if(r<.65){L.sand+=15;msg.push('🐪 caravan: +15 sand');} else if(r<.85){L.power+=15;msg.push('🌞 clear sky: +15 power');} else msg.push('🌙 calm night');
+  L.energy=clamp(L.energy,0,100); L.progress=clamp(L.progress,0,100);
+  L.log.unshift([`Night ${L.day}: ${msg.join(', ')}`,'badt']);
+  if(L.day>=L.max){ L.over=true; draw();
+   pushModal(`<div class="big">🌪️</div><h2>The storm hits</h2><p style="text-align:right"><button class="main" onclick="closeModal();LV[3].storm()">Face the storm ▶</button></p>`); return; }
+  L.day++; L.ap=3; draw();
+ },
+ storm(){ const s=$('scene'); if(s) s.classList.add('shake'); setTimeout(finishLevel,1600); }},
+];
+
+// ===================== flow =====================
+function totalStars(){ return BEST.reduce((a,b)=>a+b,0); }
+function updateHeader(){ $('totalStars').textContent=`⭐ ${totalStars()}/12`; }
+function unlocked(i){ return true; }
+function showMap(){
+  cur=null; updateHeader();
+  const pos=[[14,70],[38,30],[62,68],[86,34]];
+  const nextIdx=LV.findIndex((_,i)=>BEST[i]===0);
+  $('screen').innerHTML=`<div class="panel"><h2 style="margin-top:0">🗺️ Journey map</h2>
+  <p style="margin-top:-6px">Pick any level. Recommended order: 1 → 4.</p>
+  <div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M14 70 C24 40,30 30,38 30 S54 66,62 68 S78 36,86 34" fill="none" stroke="#a8743a" stroke-width=".8" stroke-dasharray="2 1.5"/></svg>
+  ${LV.map((l,i)=>`<button class="node ${unlocked(i)?'':'locked'} ${i===nextIdx?'next':''}" style="left:${pos[i][0]}%;top:${pos[i][1]}%" onclick="${unlocked(i)?`startLevel(${i})`:"toast('🔒 Locked')"}">
+    <div class="disc">${unlocked(i)?l.icon:'🔒'}</div><div class="nm">${i+1}. ${l.name}</div><div class="st">${starsHTML(BEST[i])}</div>${i===nextIdx?'<div class="rec">Recommended next</div>':''}</button>`).join('')}
+  <div style="position:absolute;right:16px;bottom:10px;font-size:40px">🏁</div></div></div>`;
+}
+function startLevel(i){
+  cur=i; LV[i].init(); draw();
+  const l=LV[i];
+  pushModal(`<div class="big">${l.icon}</div><h2>Level ${i+1}: ${l.name}</h2><p>${l.story}</p>
+  <div class="howto"><b>Rules</b><ol style="margin:6px 0 0;padding-left:20px">${l.how.map(h=>`<li>${h}</li>`).join('')}</ol></div>
+  <p><b>Stars:</b> ${l.goals().map(g=>g[1]).join(' · ')}</p>
+  <p style="text-align:right"><button class="main" onclick="closeModal()">Play ▶</button></p>`);
+}
+function draw(){
+  if(cur===null) return; const l=LV[cur], g=l.goals();
+  $('screen').innerHTML=`<div class="panel"><div class="lvtop"><div class="info"><h2>${l.icon} Level ${cur+1}: ${l.name}</h2><span class="concept">🎓 ${l.concept}</span>
+   <p style="font-size:13px;margin:8px 0 0">${l.story}</p></div>
+   <div class="mission"><h3>⭐ Stars</h3>${g.map(x=>`<div class="goal ${x[0]?'done':''}"><span class="star">⭐</span>${x[1]}<small>${x[2]}</small></div>`).join('')}</div></div>
+   ${l.render()}</div>`;
+}
+function finishLevel(){
+  const i=cur, l=LV[i], st=l.goals().map(g=>g[0]); const n=st[0]?st.filter(Boolean).length:0;
+  const first=BEST[i]===0&&n>0; BEST[i]=Math.max(BEST[i],n); updateHeader();
+  const titles=['💪 Good try!','🎉 Well done!','🎉 Great job!','🏆 Perfect!'], subs=['Have another go. You\'re close.','You cleared the level.','Just one star to go.','You got all 3 stars.'];
+  const last=i===LV.length-1;
+  let extra='';
+  if(i===3){ const P=L.progress; extra=`<p>${P>=100?'Shelter intact.':P>=70?'Shelter fractured.':'Shelter collapsed.'} ${P>=100&&L.energy<50?'Crew exhausted.':''}</p>`; }
+  pushModal(`<div class="stars">${starsHTML(n)}</div><h2>${titles[n]}</h2><p>${subs[n]}</p>${extra}
+   <div>${l.goals().map(g=>`<div>${g[0]?'✅':'⬜'} ${g[1]}</div>`).join('')}</div>
+   <div class="tipbox"><b>🎓 You learned: ${l.concept}</b><br>${l.tip}</div>
+   <div class="orig">${l.orig}</div>
+   <p style="text-align:right;margin-top:14px"><button class="ghost" onclick="closeModal();startLevel(${i})">🔁 Retry</button>
+   <button class="ghost" onclick="closeModal();showMap()">🗺️ Map</button>
+   ${!last?`<button class="main" onclick="closeModal();startLevel(${i+1})">Next level ▶</button>`:''}
+   ${BEST.every(b=>b>0)?`<button class="main" onclick="closeModal();certificate()">🏁 Finish journey</button>`:''}</p>`);
+  
+}
+function certificate(){
+  showMap(); const t=totalStars();
+  pushModal(`<div class="big">🏆</div><h2>Journey complete</h2><div class="stars" style="font-size:34px">⭐ ${t} / 15</div>
+  <div class="tipbox">🚁 Drone scanning<br>🧊 Digital twin<br>📡 Wearable sensors<br>🤖 Robots + people<br><br>Society 5.0: data and machines working together for people.</div>
+  <p style="text-align:right"><button class="ghost" onclick="closeModal();recap(0,0)">🧠 3-question recap</button> <button class="main" onclick="closeModal()">Back to map</button></p>`);
+}
+const QUIZ=[
+ {q:'What is <b>Society 5.0</b>?',o:['A human-centred society that fuses cyberspace (data, AI) with physical space (machines, robots)','The 5th version of the steam engine age','A society where robots replace all workers'],a:0,e:'Its focus is people\'s wellbeing, not technology for its own sake.'},
+ {q:'In Level 2, why could you move rooms for free before building?',o:['It was a bug','You were editing a digital twin: testing in cyberspace is cheap, rebuilding on site is not','Rooms are always free'],a:1,e:'Digital twins and BIM let teams find problems before construction.'},
+ {q:'In Level 3, what did the wearable sensors change?',o:['Nothing','They made people work faster','They showed real health data, so you could protect workers before they collapsed'],a:2,e:'Human-centred: data is used to keep people safe.'},
+ {q:'In Level 4, what is the best role for the robot?',o:['Do heavy, repetitive work while a human supervises and decides','Replace the whole crew','Make all decisions'],a:0,e:'That is human–robot collaboration (HRC).'},
+];
+let RQ=[];
+function recap(i,r){
+  if(i===0) RQ=shuffle([...QUIZ]).slice(0,3);
+  if(i>=3){ pushModal(`<div class="big">🧠</div><h2>Recap: ${r}/3 correct</h2><p style="text-align:right"><button class="main" onclick="closeModal()">Close</button></p>`); return; }
+  const q=RQ[i]; pushModal(`<h2>Recap ${i+1}/3</h2><p>${q.q}</p>${q.o.map((o,k)=>`<button class="opt" onclick="ans(${i},${k},${r})">${o}</button>`).join('')}<div id="qfb"></div>`);
+}
+function ans(i,k,r){ const q=RQ[i],ok=k===q.a;
+  document.querySelectorAll('.opt').forEach((b,j)=>{b.disabled=true;if(j===q.a)b.classList.add('right');else if(j===k)b.classList.add('wrong');});
+  $('qfb').innerHTML=`<div class="tipbox">${ok?'✅ Correct!':'❌ Not quite.'} ${q.e}</div><p style="text-align:right"><button class="main" onclick="closeModal();recap(${i+1},${r+(ok?1:0)})">Next</button></p>`; }
+
+// start
+showMap();
+pushModal(`<div class="big">🏜️🚐</div><h2>Sand Ark: Quick Mode</h2>
+<p>A sandstorm is coming. Help Alex's caravan cross the desert.</p>
+<div class="howto">4 levels · 2 min each<br>1 goal and up to 3 stars per level<br>Each level teaches 1 Society 5.0 idea</div>
+<p style="text-align:right"><button class="main" onclick="closeModal()">Start ▶</button></p>`);
+</script>
+</body>
+</html>
