@@ -2,7 +2,7 @@
 
 A 4-level browser game (about 8 minutes) teaching **Society 5.0** in construction. A concept prototype for a short mode of Sand Ark.
 
-**Play:** `https://<your-username>.github.io/<repo-name>/` or open `index.html` in any browser.
+**Play:** `[https://<your-username>.github.io/<repo-name>/](https://xulily9.github.io/SankGame_Prototype/)` 
 
 **Society 5.0:** Japan's vision of a human-centred society where data and AI (cyberspace) work with machines and people (physical space).
 
